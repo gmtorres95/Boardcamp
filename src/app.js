@@ -33,6 +33,29 @@ app.post("/categories", async (req, res) => {
     }
 })
 
+app.get("/games", async (req, res) => {
+    try {
+        const result = connection.query(`
+            SELECT
+                games.id,
+                games.name,
+                games.image,
+                games."stockTotal",
+                games."categoryId",
+                games."pricePerDay",
+                categories.name
+                    AS "categoryName"
+            FROM games
+            JOIN categories
+                ON games."categoryId" = categories.id;
+        `);
+        res.send(result.rows);
+    }
+    catch {
+        res.sendStatus(500);
+    }
+})
+
 app.listen(4000, () => {
   console.log('Server is listening on port 4000.');
 });
