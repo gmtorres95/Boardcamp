@@ -19,13 +19,13 @@ app.get("/categories", async (req, res) => {
 
 app.post("/categories", async (req, res) => {
     const { name } = req.body;
-    if(!name) res.send(400);
+    if(!name) return res.send(400);
 
     try {
         const duplicate = await connection.query(`SELECT * FROM categories WHERE name=$1;`, [name]);
         if(duplicate.rows.length) return res.sendStatus(409);
 
-        const result = await connection.query(`INSERT INTO categories (name) VALUES ($1);`, [name]);
+        await connection.query(`INSERT INTO categories (name) VALUES ($1);`, [name]);
         res.sendStatus(201);
     }
     catch {
@@ -35,7 +35,7 @@ app.post("/categories", async (req, res) => {
 
 app.get("/games", async (req, res) => {
     try {
-        const result = connection.query(`
+        const result = await connection.query(`
             SELECT
                 games.id,
                 games.name,
@@ -50,6 +50,40 @@ app.get("/games", async (req, res) => {
                 ON games."categoryId" = categories.id;
         `);
         res.send(result.rows);
+    }
+    catch {
+        res.sendStatus(500);
+    }
+})
+
+app.post("/games", async (req, res) => {
+    const {
+        name,
+        image,
+        stockTotal,
+        categoryId,
+        pricePerDay
+    } = req.body;
+    if(!name || stockTotal <= 0 || pricePerDay <= 0) return res.sendStatus(400);
+
+    try {
+        const invalidId = await connection.query(`SELECT * FROM categories WHERE id = $1;`, [categoryId]);
+        if(!invalidId.rows.length) return res.sendStatus(400);
+
+        // const duplicate = await connection.query(`SELECT * FROM categories WHERE name = $1`, [name]);
+        // if(duplicate.rows.length) return res.sendStatus(409);
+
+        await connection.query(`
+            INSERT INTO games (
+                name,
+                image,
+                "stockTotal",
+                "categoryId",
+                "pricePerDay"
+            )
+            VALUES ($1, $2, $3, $4, $5);
+        `, [name, image, stockTotal, categoryId, pricePerDay]);
+        res.sendStatus(201);
     }
     catch {
         res.sendStatus(500);
