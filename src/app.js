@@ -17,6 +17,22 @@ app.get("/categories", async (req, res) => {
     }
 })
 
+app.post("/categories", async (req, res) => {
+    const { name } = req.body;
+    if(!name) res.send(400);
+
+    try {
+        const duplicate = await connection.query(`SELECT * FROM categories WHERE name=$1;`, [name]);
+        if(duplicate.rows.length) return res.sendStatus(409);
+
+        const result = await connection.query(`INSERT INTO categories (name) VALUES ($1);`, [name]);
+        res.sendStatus(201);
+    }
+    catch {
+        res.send(500);
+    }
+})
+
 app.listen(4000, () => {
   console.log('Server is listening on port 4000.');
 });
