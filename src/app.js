@@ -144,6 +144,37 @@ app.post("/customers", async (req, res) => {
     }
 })
 
+app.put("/customers/:id", async (req, res) => {
+    const id = req.params.id;
+    const {
+        name,
+        phone,
+        cpf,
+    } = req.body;
+    const birthday = req.body.birthday.split("T")[0];
+
+    if(cpf.length !== 11 || !Number(cpf) || phone.length > 11 || phone.length < 10 || !Number(phone) || !name || !Date.parse(birthday) || birthday.length !== 10) return res.sendStatus(400);
+
+    try {
+        const duplicate = await connection.query(`SELECT * FROM customers WHERE cpf = $1;`, [cpf]);
+        if(duplicate.rows.length > 1) return res.sendStatus(409);
+        
+        await connection.query(`
+            UPDATE customers
+            SET
+                name = $1,
+                phone = $2,
+                cpf = $3,
+                birthday = $4
+            WHERE id = $5;
+        `, [name, phone, cpf, birthday, id]);
+        res.sendStatus(201);
+    }
+    catch {
+        res.sendStatus(500);
+    }
+})
+
 app.listen(4000, () => {
   console.log('Server is listening on port 4000.');
 });
