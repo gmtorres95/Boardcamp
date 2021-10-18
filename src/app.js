@@ -96,7 +96,19 @@ app.get("/customers", async (req, res) => {
         res.send(result.rows);
     }
     catch {
-        res.send(500);
+        res.sendStatus(500);
+    }
+})
+
+app.get("/customers/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await connection.query(`SELECT * FROM customers WHERE id = $1;`, [id]);
+        if(result.rows.length) return res.send(result.rows[0]);
+        res.sendStatus(404);
+    }
+    catch {
+        res.sendStatus(500)
     }
 })
 
