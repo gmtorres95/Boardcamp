@@ -112,6 +112,34 @@ app.get("/customers/:id", async (req, res) => {
     }
 })
 
+app.post("/customers", async (req, res) => {
+    const {
+        name,
+        phone,
+        cpf,
+        birthday
+    } = req.body;
+    if(cpf.length !== 11 || !Number(cpf) || phone.length > 11 || phone.length < 10 || !Number(phone) || !name || !Date.parse(birthday) || birthday.length !== 10) return res.sendStatus(400);
+
+    try {
+        const duplicate = await connection.query(`SELECT * FROM customers WHERE cpf = $1;`, [cpf]);
+        if(duplicate.rows.length) return res.sendStatus(409);
+
+        await connection.query(`
+            INSERT INTO customers (
+                name,
+                phone,
+                cpf,
+                birthday
+            ) VALUES ($1, $2, $3, $4);
+        `, [name, phone, cpf, birthday]);
+        res.sendStatus(201);
+    }
+    catch {
+        res.sendStatus(500);
+    }
+})
+
 app.listen(4000, () => {
   console.log('Server is listening on port 4000.');
 });
