@@ -175,6 +175,32 @@ app.put("/customers/:id", async (req, res) => {
     }
 })
 
+app.get("/rentals", async (req, res) => {
+    try {
+        const result = await connection.query(`
+            SELECT
+                rentals.*,
+                customers.id,
+                customers.name,
+                games.id,
+                games.name,
+                games."categoryId",
+                categories.id AS "categoryName"
+            FROM rentals
+            JOIN customers
+                ON rentals."customerId" = customers.id
+            JOIN games
+                ON rentals."gameId" = games.id
+            JOIN categories
+                ON games."categoryId" = categories.id;
+        `);
+        res.send(result.rows);
+    }
+    catch {
+        res.sendStatus(500);
+    }
+})
+
 app.listen(4000, () => {
   console.log('Server is listening on port 4000.');
 });
