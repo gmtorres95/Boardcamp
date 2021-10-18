@@ -70,8 +70,8 @@ app.post("/games", async (req, res) => {
         const invalidId = await connection.query(`SELECT * FROM categories WHERE id = $1;`, [categoryId]);
         if(!invalidId.rows.length) return res.sendStatus(400);
 
-        // const duplicate = await connection.query(`SELECT * FROM categories WHERE name = $1`, [name]);
-        // if(duplicate.rows.length) return res.sendStatus(409);
+        const duplicate = await connection.query(`SELECT * FROM games WHERE name = $1`, [name]);
+        if(duplicate.rows.length) return res.sendStatus(409);
 
         await connection.query(`
             INSERT INTO games (
@@ -87,6 +87,16 @@ app.post("/games", async (req, res) => {
     }
     catch {
         res.sendStatus(500);
+    }
+})
+
+app.get("/customers", async (req, res) => {
+    try {
+        const result = await connection.query(`SELECT * FROM customers;`);
+        res.send(result.rows);
+    }
+    catch {
+        res.send(500);
     }
 })
 
