@@ -1,4 +1,4 @@
-import express from "express";
+import express, { query } from "express";
 import cors from "cors";
 
 import connection from './database/database.js';
@@ -90,7 +90,7 @@ app.post("/games", async (req, res) => {
 })
 
 app.get("/customers", async (req, res) => {
-    const cpf = req.query.cpf;
+    const { cpf } = req.query;
     let result;
     
     try {
@@ -144,7 +144,7 @@ app.post("/customers", async (req, res) => {
 })
 
 app.put("/customers/:id", async (req, res) => {
-    const id = req.params.id;
+    const { id } = req.params;
     const {
         name,
         phone,
@@ -242,7 +242,7 @@ app.post("/rentals", async (req, res) => {
 })
 
 app.post("/rentals/:id/return", async (req, res) => {
-    const id = req.params.id;
+    const { id } = req.params;
     const returnDate = new Date().toISOString().split("T")[0];
     let delayFee = 0;
 
@@ -261,6 +261,22 @@ app.post("/rentals/:id/return", async (req, res) => {
                 "delayFee" = $2
             WHERE id = $3;
         `, [returnDate, delayFee, id]);
+        res.sendStatus(200);
+    }
+    catch {
+        res.sendStatus(500);
+    }
+})
+
+app.delete("/rentals/:id", async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const rental = await connection.query(`SELECT * FROM rentals WHERE id = $1;`, [id]);
+        if(!rental.rows.length) return res.sendStatus(404);
+        if(rental.rows[0].returnDate) return res.sendStatus(400);
+
+        await connection.query(`DELETE FROM rentals WHERE id = $1;`, [id]);
         res.sendStatus(200);
     }
     catch {
