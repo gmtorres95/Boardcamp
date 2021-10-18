@@ -241,6 +241,33 @@ app.post("/rentals", async (req, res) => {
     }
 })
 
+app.post("/rentals/:id/return", async (req, res) => {
+    const id = req.params.id;
+    const returnDate = new Date().toISOString().split("T")[0];
+    let delayFee = 0;
+
+    try {
+        const rental = await connection.query(`SELECT * FROM rentals WHERE (id = $1 AND "returnDate" IS NULL);`, [id]);
+        if(!rental.rows.length) return res.sendStatus(404);
+        const game = await connection.query(`SELECT * FROM games WHERE id = $1;`, [rental.rows[0].gameId]);
+        if(new Date(returnDate).getTime < new Date()) {
+            delayFee = (new Date(returnDate).getTime() - new Date().getTime())/(1000*60*60*24) * game.rows[0].pricePerDay;
+        }
+
+        await connection.query(`
+            UPDATE rentals
+            SET
+                "returnDate" = $1,
+                "delayFee" = $2
+            WHERE id = $3;
+        `, [returnDate, delayFee, id]);
+        res.sendStatus(200);
+    }
+    catch {
+        res.sendStatus(500);
+    }
+})
+
 app.listen(4000, () => {
   console.log('Server is listening on port 4000.');
 });
