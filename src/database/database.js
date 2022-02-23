@@ -3,7 +3,7 @@ import pg from "pg";
 const { Pool } = pg;
 
 const user = 'postgres';
-const password = '7262';
+const password = 'example';
 const host = 'localhost';
 const port = 5432;
 const database = 'boardcamp';
